@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ${APP_NAME}
+  namespace: ${APP_NAME}
+data:
+  nginx.conf: |
+    events {}
+
+    http {
+        server {
+            listen 8080;
+
+            location / {
+                auth_basic "Restricted Area";
+                #Secret Reference
+                auth_basic_user_file /etc/nginx/secrets/auth;
+
+                add_header Content-Type text/plain;
+                return 200 "Hello, authenticated user!\n";
+            }
+        }
+    }
