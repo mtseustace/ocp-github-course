@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ${APP_NAME}
+  namespace: ${OPENSHIFT_NAMESPACE}
+data:
+  nginx.conf: |
+    events {}
+
+    http {
+        access_log /var/log/nginx/access.log;
+        access_log /dev/stdout;
+
+        error_log /dev/stderr warn;
+
+        server {
+            listen 80;
+
+            location / {
+                auth_basic "Restricted Area";
+                auth_basic_user_file /etc/nginx/secrets/auth;
+
+                add_header Content-Type text/plain;
+                return 200 "Hello, authenticated user!\n";
+            }
+        }
+    }
