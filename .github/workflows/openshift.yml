@@ -98,26 +98,25 @@ jobs:
       run: |
         echo "IMAGE_TAGS=latest ${GITHUB_SHA::12}" | tee -a $GITHUB_ENV
 
-    # https://github.com/redhat-actions/buildah-build#readme
-    - name: Build from Dockerfile
+    # https://github.com/redhat-actions/buildah-build#readm
+    - name: Build from Dockerfile BLUE
       id: build-image
       uses: redhat-actions/buildah-build@v2
       with:
-        image: ${{ env.APP_NAME }}
+        image: ${{ env.APP_NAME }}-blue
         tags: ${{ env.IMAGE_TAGS }}
 
         # If you don't have a Dockerfile/Containerfile, refer to https://github.com/redhat-actions/buildah-build#scratch-build-inputs
         # Or, perform a source-to-image build using https://github.com/redhat-actions/s2i-build
         # Otherwise, point this to your Dockerfile/Containerfile relative to the repository root.
         dockerfiles: |
-          ./Dockerfile
-
-    # https://github.com/redhat-actions/push-to-registry#readme
+          ./Dockerfile-blue
+        
     - name: Push to registry
       id: push-image
       uses: redhat-actions/push-to-registry@v2
       with:
-        image: ${{ steps.build-image.outputs.image }}
+        image: ${{ steps.build-image.outputs.image }}-blue
         tags: ${{ steps.build-image.outputs.tags }}
         registry: ${{ env.IMAGE_REGISTRY }}
         username: ${{ env.IMAGE_REGISTRY_USER }}
@@ -143,7 +142,7 @@ jobs:
       run: |
         export IMAGE=${{ steps.push-image.outputs.registry-path }}
         export OPENSHIFT_NAMESPACE=${{ env.OPENSHIFT_NAMESPACE }}
-        export APP_NAME=${{ env.APP_NAME }}
+        export APP_NAME=${{ env.APP_NAME }}-blue
 
         
         echo ${{ steps.push-image.outputs.registry-path }}
