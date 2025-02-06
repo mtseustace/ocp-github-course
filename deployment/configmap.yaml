@@ -5,9 +5,6 @@ metadata:
   namespace: ${OPENSHIFT_NAMESPACE}
 data:
   nginx.conf: |
-    events {}
-
-    http {
         server {
             listen 8080;
 
@@ -20,4 +17,3 @@ data:
                 return 200 "Hello, authenticated user!\n";
             }
         }
-    }
