@@ -100,7 +100,7 @@ jobs:
         sed -i 's|\${IMAGE}|'"$IMAGE"'|g' deployment/base/deployment-w-storage.yaml deployment/base/service.yaml
         sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g'  deployment/base/pvc.yaml deployment/overlays/release/configmap-patch.yaml deployment/overlays/release/service-patch.yaml 
         sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/base/pvc.yaml deployment/overlays/release/configmap-patch.yaml deployment/overlays/release/service-patch.yaml
-        sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g' deployment/base/route.yaml deployment/overlays/release/route-patch.yaml
+        sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g' deployment/base/route.yaml deployment/overlays/release/kustomization.yaml deployment/overlays/release/route-patch.yaml
         sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/base/route.yaml deployment/overlays/release/route-patch.yaml
         
         oc apply -f deployment/base/pvc.yaml
