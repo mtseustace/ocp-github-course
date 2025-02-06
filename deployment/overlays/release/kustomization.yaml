@@ -13,6 +13,10 @@ patches:
   target:
     kind: Service
     name: ${APP_NAME}
+- path: route-patch.yaml
+  target:
+    kind: Route
+    name: ${APP_NAME}
 
 resources: 
 - ../../base
