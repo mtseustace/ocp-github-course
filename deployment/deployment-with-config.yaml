@@ -35,7 +35,7 @@ spec:
             - containerPort: 8080
           volumeMounts:
             - name: nginx-config
-              mountPath: /etc/nginx/nginx.conf
+              mountPath: /opt/bitnami/nginx/conf/server_blocks/nginx.conf
               subPath: nginx.conf
             - name: nginx-auth
               mountPath: /etc/nginx/secrets
