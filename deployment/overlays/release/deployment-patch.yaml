@@ -1,1 +1,13 @@
-
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${APP_NAME}
+  namespace: ${OPENSHIFT_NAMESPACE}
+spec:
+  selector:
+    matchLabels:
+      app: ${APP_NAME}-dev
+  template:
+    metadata:
+      labels:
+        app: ${APP_NAME}-dev
