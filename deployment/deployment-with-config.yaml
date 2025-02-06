@@ -23,10 +23,10 @@ spec:
       volumes:
         - name: nginx-config
           configMap:
-            name: nginx-config
+            name: ${APP_NAME}
         - name: nginx-auth
           secret:
-            secretName: nginx-auth
+            secretName: ${APP_NAME}
       containers:
         - name: ${APP_NAME}
           image: ${IMAGE}
