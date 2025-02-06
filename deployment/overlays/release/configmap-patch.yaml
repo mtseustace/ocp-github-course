@@ -14,7 +14,7 @@ data:
         error_log /dev/stderr warn;
 
         server {
-            listen 80;
+            listen 8080;
 
             location / {
                 auth_basic "Restricted Area";
