@@ -120,9 +120,3 @@ jobs:
         sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g' deployment/base/route.yaml
         sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/base/route.yaml
         oc apply -f deployment/base/route.yaml
-
-    - name: get route
-      run: | 
-        ROUTE=$(oc get route $${{ env.APP_NAME }} -n ${{ env.OPENSHIFT_NAMESPACE }} -o jsonpath='{.spec.host}')
-
-        echo "The route is: http://$ROUTE"
