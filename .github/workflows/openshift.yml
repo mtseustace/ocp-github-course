@@ -1,55 +1,18 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-# 💁 The OpenShift Starter workflow will:
-# - Checkout your repository
-# - Perform a container image build
-# - Push the built image to the GitHub Container Registry (GHCR)
-# - Log in to your OpenShift cluster
-# - Create an OpenShift app from the image and expose it to the internet
-
-# ℹ️ Configure your repository and the workflow with the following steps:
-# 1. Have access to an OpenShift cluster. Refer to https://www.openshift.com/try
-# 2. Create the OPENSHIFT_SERVER and OPENSHIFT_TOKEN repository secrets. Refer to:
-#   - https://github.com/redhat-actions/oc-login#readme
-#   - https://docs.github.com/en/actions/reference/encrypted-secrets
-#   - https://cli.github.com/manual/gh_secret_set
-# 3. (Optional) Edit the top-level 'env' section as marked with '🖊️' if the defaults are not suitable for your project.
-# 4. (Optional) Edit the build-image step to build your project.
-#    The default build type is by using a Dockerfile at the root of the repository,
-#    but can be replaced with a different file, a source-to-image build, or a step-by-step buildah build.
-# 5. Commit and push the workflow file to your default branch to trigger a workflow run.
-
-# 👋 Visit our GitHub organization at https://github.com/redhat-actions/ to see our actions and provide feedback.
-
 name: OpenShift
 
 env:
-  # 🖊️ EDIT your repository secrets to log into your OpenShift cluster and set up the context.
-  # See https://github.com/redhat-actions/oc-login#readme for how to retrieve these values.
-  # To get a permanent token, refer to https://github.com/redhat-actions/oc-login/wiki/Using-a-Service-Account-for-GitHub-Actions
   OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
   OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
-  # 🖊️ EDIT to set the kube context's namespace after login. Leave blank to use your user's default namespace.
   OPENSHIFT_NAMESPACE: ${{ secrets.OPENSHIFT_NAMESPACE }}
 
-  # 🖊️ EDIT to set a name for your OpenShift app, or a default one will be generated below.
   APP_NAME: ""
 
-  # 🖊️ EDIT with the port your application should be accessible on.
-  # If the container image exposes *exactly one* port, this can be left blank.
-  # Refer to the 'port' input of https://github.com/redhat-actions/oc-new-app
   APP_PORT: ""
 
-  # 🖊️ EDIT to change the image registry settings.
-  # Registries such as GHCR, Quay.io, and Docker Hub are supported.
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   IMAGE_REGISTRY_USER: ${{ github.actor }}
   IMAGE_REGISTRY_PASSWORD: ${{ secrets.GHCR_TOKEN }}
 
-  # 🖊️ EDIT to specify custom tags for the container image, or default tags will be generated below.
   IMAGE_TAGS: "1.0.${{ github.run_number }}"
 
 on:
@@ -60,19 +23,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # 🖊️ EDIT if you want to run vulnerability check on your project before deploying
-  # the application. Please uncomment the below CRDA scan job and configure to run it in
-  # your workflow. For details about CRDA action visit https://github.com/redhat-actions/crda/blob/main/README.md
-  #
-  # TODO: Make sure to add 'CRDA Scan' starter workflow from the 'Actions' tab.
-  # For guide on adding new starter workflow visit https://docs.github.com/en/github-ae@latest/actions/using-workflows/using-starter-workflows
-
-  #crda-scan:
-  #  uses: ./.github/workflows/crda.yml
-  #  secrets:
-  #    CRDA_KEY: ${{ secrets.CRDA_KEY }}
-  #    # SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}       # Either use SNYK_TOKEN or CRDA_KEY
-
+ 
   openshift-ci-cd:
     # 🖊️ Uncomment this if you are using CRDA scan step above
     # needs: crda-scan
@@ -99,18 +50,15 @@ jobs:
         echo "IMAGE_TAGS=latest ${GITHUB_SHA::12}" | tee -a $GITHUB_ENV
 
     # https://github.com/redhat-actions/buildah-build#readm
-    - name: Build from Dockerfile BLUE
+    - name: Build from Dockerfile
       id: build-image
       uses: redhat-actions/buildah-build@v2
       with:
-        image: ${{ env.APP_NAME }}-blue
+        image: ${{ env.APP_NAME }}
         tags: ${{ env.IMAGE_TAGS }}
 
-        # If you don't have a Dockerfile/Containerfile, refer to https://github.com/redhat-actions/buildah-build#scratch-build-inputs
-        # Or, perform a source-to-image build using https://github.com/redhat-actions/s2i-build
-        # Otherwise, point this to your Dockerfile/Containerfile relative to the repository root.
         dockerfiles: |
-          ./Dockerfile-blue
+          ./Dockerfile
         
     - name: Push to registry
       id: push-image
@@ -142,15 +90,26 @@ jobs:
       run: |
         export IMAGE=${{ steps.push-image.outputs.registry-path }}
         export OPENSHIFT_NAMESPACE=${{ env.OPENSHIFT_NAMESPACE }}
-        export APP_NAME=${{ env.APP_NAME }}-blue
+        export APP_NAME=${{ env.APP_NAME }}
 
         
         echo ${{ steps.push-image.outputs.registry-path }}
-        sed -i 's|\${IMAGE}|'"$IMAGE"'|g' deployment/deployment-with-config.yaml deployment/service.yaml
-        sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g' deployment/deployment-with-config.yaml deployment/service.yaml  deployment/configmap.yaml deployment/secret.yaml  
-        sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/deployment-with-config.yaml deployment/service.yaml  deployment/configmap.yaml deployment/secret.yaml  
-        oc apply -f deployment/configmap.yaml -f deployment/secret.yaml
-        oc apply -f deployment/deployment-with-config.yaml -f deployment/service.yaml
+        sed -i 's|\${IMAGE}|'"$IMAGE"'|g' deployment/base/deployment-w-storage.yaml deployment/base/service.yaml
+        sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g' deployment/base/deployment-w-storage.yaml deployment/base/service.yaml  deployment/base/configmap-w-storage.yaml deployment/base/secret.yaml  
+        sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/base/deployment-w-storage.yaml deployment/base/service.yaml  deployment/base/configmap-w-storage.yaml deployment/base/secret.yaml  
+        sed -i 's|\${IMAGE}|'"$IMAGE"'|g' deployment/base/deployment-w-storage.yaml deployment/base/service.yaml
+        sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g'  deployment/base/pvc.yaml deployment/overlays/release/configmap-patch.yaml 
+        sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/base/pvc.yaml deployment/overlays/release/configmap-patch.yaml
+        sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g' deployment/base/route.yaml
+        sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/base/route.yaml
+        
+        oc apply -f deployment/base/pvc.yaml
+        oc apply -f deployment/base/configmap-w-storage.yaml -f deployment/base/secret.yaml
+        oc apply -f deployment/base/deployment-w-storage.yaml -f deployment/base/service.yaml
+        
+        #kustomize
+        oc apply -k deployment/overlays/release        
+        
         oc get pods
 
     - name: create route
@@ -158,14 +117,12 @@ jobs:
         export OPENSHIFT_NAMESPACE=${{ env.OPENSHIFT_NAMESPACE }}
         export APP_NAME=${{ env.APP_NAME }}
         
-        sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g' deployment/route.yaml
-        sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/route.yaml
-        oc apply -f deployment/route.yaml
+        sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g' deployment/base/route.yaml
+        sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/base/route.yaml
+        oc apply -f deployment/base/route.yaml
 
     - name: get route
       run: | 
         ROUTE=$(oc get route $${{ env.APP_NAME }} -n ${{ env.OPENSHIFT_NAMESPACE }} -o jsonpath='{.spec.host}')
 
         echo "The route is: http://$ROUTE"
-        
-    
