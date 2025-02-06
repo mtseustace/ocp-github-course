@@ -4,7 +4,7 @@ metadata:
   name: ${APP_NAME}
   namespace: ${OPENSHIFT_NAMESPACE}
 spec:
-  replicas: 8
+  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -27,6 +27,9 @@ spec:
         - name: nginx-auth
           secret:
             secretName: ${APP_NAME}
+        - name: nginx-pvc
+          persistentVolumeClaim:
+            claimName: ${APP_NAME}
       containers:
         - name: ${APP_NAME}
           image: ${IMAGE}
@@ -35,8 +38,10 @@ spec:
             - containerPort: 8080
           volumeMounts:
             - name: nginx-config
-              mountPath: /opt/bitnami/nginx/conf/server_blocks/default.conf
+              mountPath: /opt/bitnami/nginx/conf/nginx.conf
               subPath: nginx.conf
             - name: nginx-auth
               mountPath: /etc/nginx/secrets
               readOnly: true
+            - name: nginx-pvc
+              mountPath: /var/log/nginx/
