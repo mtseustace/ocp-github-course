@@ -146,10 +146,11 @@ jobs:
 
         
         echo ${{ steps.push-image.outputs.registry-path }}
-        sed -i 's|\${IMAGE}|'"$IMAGE"'|g' deployment/deployment.yaml deployment/service.yaml
-        sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g' deployment/deployment.yaml deployment/service.yaml
-        sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/deployment.yaml deployment/service.yaml
-        oc apply -f deployment/deployment.yaml -f deployment/service.yaml
+        sed -i 's|\${IMAGE}|'"$IMAGE"'|g' deployment/deployment-with-config.yaml deployment/service.yaml
+        sed -i 's|\${APP_NAME}|'"$APP_NAME"'|g' deployment/deployment-with-config.yaml deployment/service.yaml  deployment/configmap.yaml deployment/secret.yaml  
+        sed -i 's|\${OPENSHIFT_NAMESPACE}|'"$OPENSHIFT_NAMESPACE"'|g' deployment/deployment-with-config.yaml deployment/service.yaml  deployment/configmap.yaml deployment/secret.yaml  
+        oc apply -f deployment/configmap.yaml -f deployment/secret.yaml
+        oc apply -f deployment/deployment-with-config.yaml -f deployment/service.yaml
         oc get pods
 
     - name: create route
