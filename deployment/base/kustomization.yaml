@@ -1,5 +1,5 @@
 resources: 
-  - pv.yaml
+
   - pvc.yaml
   - configmap-w-storage.yaml
   - secret.yaml
